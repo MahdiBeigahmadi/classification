@@ -51,14 +51,16 @@ class PerceptronClassifier:
 
         for iteration in range(self.max_iterations):
             print("Starting iteration ", iteration, "...")
-            for i in range(len(trainingData)):
-                "*** YOUR CODE HERE ***"
-                util.raiseNotDefined()
-                #compute score for each label:
+            for i, data in enumerate(trainingData):
+                scores = util.Counter()
+                for label in self.legalLabels:
+                    scores[label] = self.weights[label] * data
+                predictedLabel = scores.argMax()
+                trueLabel = trainingLabels[i]
 
-                #find the most optimum label:
-
-                #update weight if necessary:
+                if predictedLabel != trueLabel:
+                    self.weights[trueLabel] += data
+                    self.weights[predictedLabel] -= data
 
         print("finished training")
 
@@ -70,10 +72,12 @@ class PerceptronClassifier:
         Recall that a datum is a util.counter...
         """
         guesses = []
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        for datum in data:
+            vect = util.Counter()
+            "*** YOUR CODE HERE ***"
+            for label in self.legalLabels:
+                vect[label] = self.weights[label] * datum
+            guesses.append(vect.argMax())
         return guesses
 
     def findHighWeightFeatures(self, label):
@@ -83,6 +87,6 @@ class PerceptronClassifier:
         featuresWeights = []
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
 
-        return featuresWeights
+        return self.weights[label].sortedKeys()[:100]

@@ -79,8 +79,11 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
             datum = trainingData[i]
             label = trainingLabels[i]
             "*** YOUR CODE HERE to complete populating commonPrior, commonCounts, and commonConditionalProb ***"
-            util.raiseNotDefined()
-
+            commonPrior[label] += 1
+            for feat, value in datum.items():
+                if value > 0:
+                    commonConditionalProb[(feat, label)] += 1
+                commonCounts[(feat, label)] += 1
         for k in kgrid:  # Smoothing parameter tuning loop!
             prior = util.Counter()
             conditionalProb = util.Counter()
@@ -98,9 +101,10 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
             for label in self.legalLabels:
                 for feat in self.features:
                     "*** YOUR CODE HERE to update conditionalProb and counts using Lablace smoothing ***"
-                    util.raiseNotDefined()
+                    conditionalProb[(feat, label)] += k
+                    counts[(feat, label)] += 2 * k
 
-            # normalizing:
+                    # normalizing:
             prior.normalize()
             for x, count in conditionalProb.items():
                 conditionalProb[x] = count * 1.0 / counts[x]
@@ -148,8 +152,12 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         logJoint = util.Counter()
 
         for label in self.legalLabels:
-            "*** YOUR CODE HERE, to populate logJoint() list ***"
-            util.raiseNotDefined()
+            logJoint[label] = math.log(self.prior[label])
+            for feat, value in datum.items():
+                if value > 0:
+                    logJoint[label] += math.log(self.conditionalProb[(feat, label)])
+                else:
+                    logJoint[label] += math.log(1 - self.conditionalProb[(feat, label)])
         return logJoint
 
     def findHighOddsFeatures(self, label1, label2):
@@ -160,8 +168,12 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         Note: you may find 'self.features' a useful way to loop through all possible features
         """
         featuresOdds = []
+        for feat in self.features:
+            if self.conditionalProb[(feat, label2)] > 0:
+                oddsRatio = self.conditionalProb[(feat, label1)] / self.conditionalProb[(feat, label2)]
+                featuresOdds.append((feat, oddsRatio))
 
-        "*** YOUR CODE HERE, to populate featureOdds based on above formula. ***"
-        util.raiseNotDefined()
+        featuresOdds.sort(key=lambda x: x[1], reverse=True)
+        topFeatures = [feature for feature, _ in featuresOdds[:100]]
 
-        return featuresOdds
+        return topFeatures

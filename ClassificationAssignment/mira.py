@@ -9,6 +9,7 @@
 
 # Mira implementation
 import util
+
 PRINT = True
 
 
@@ -19,6 +20,7 @@ class MiraClassifier:
     Note that the variable 'datum' in this code refers to a counter of features
     (not to a raw samples.Datum).
     """
+
     def __init__(self, legalLabels, max_iterations):
         self.legalLabels = legalLabels
         self.type = "mira"
@@ -32,7 +34,7 @@ class MiraClassifier:
         "Resets the weights of each label to zero vectors"
         self.weights = {}
         for label in self.legalLabels:
-            self.weights[label] = util.Counter() # this is the data-structure you should use
+            self.weights[label] = util.Counter()  # this is the data-structure you should use
 
     def setWeights(self, weights):
         assert len(weights) == len(self.legalLabels)
@@ -41,7 +43,7 @@ class MiraClassifier:
     def train(self, trainingData, trainingLabels, validationData, validationLabels):
         "Outside shell to call your method. Do not modify this method."
 
-        self.features = trainingData[0].keys() # this could be useful for your code later...
+        self.features = trainingData[0].keys()  # this could be useful for your code later...
 
         if (self.automaticTuning):
             cGrid = [0.001, 0.002, 0.004, 0.008]
@@ -61,14 +63,44 @@ class MiraClassifier:
         representing a vector of values.
         """
 
-        bestAccuracyCount = -1  # best accuracy so far on validation set
-        cGrid.sort(reverse=True)
-        bestParams = cGrid[0]
-        "*** YOUR CODE HERE ***"
-        #util.raiseNotDefined()
+        bestAccuracyCount = -1
+        bestWeights = {}
 
+        for c in cGrid:
+            self.weights = {label: util.Counter() for label in self.legalLabels}
+            for iteration in range(self.max_iterations):
+                for i in range(len(trainingData)):
+                    currentFeatures = trainingData[i]
+                    trueLabel = trainingLabels[i]
+                    scores = util.Counter()
 
-        print("finished training. Best cGrid param = ", bestParams)
+                    for label in self.legalLabels:
+                        scores[label] = currentFeatures * self.weights[label]
+
+                    predictedLabel = scores.argMax()
+
+                    if predictedLabel != trueLabel:
+                        f = currentFeatures
+                        tau = ((self.weights[predictedLabel] - self.weights[trueLabel]) * f + 1.0) / (2.0 * (f * f))
+                        tau = min(c, tau)
+
+                        f_scaled = f.copy()
+                        f_scaled.divideAll(1.0 / tau)
+                        self.weights[trueLabel] += f_scaled
+                        self.weights[predictedLabel] -= f_scaled
+
+            validationGuesses = self.classify(validationData)
+            correct = [validationGuesses[i] == validationLabels[i] for i in range(len(validationLabels))]
+            accuracy = correct.count(True) / len(correct)
+
+            if accuracy > bestAccuracyCount:
+                bestAccuracyCount = accuracy
+                bestWeights = self.weights.copy()
+                bestParameter = c
+
+        self.weights = bestWeights
+        print("Finished training. Best C parameter =", bestParameter)
+        return bestAccuracyCount
 
     def classify(self, data):
         """
@@ -79,17 +111,19 @@ class MiraClassifier:
         """
         guesses = []
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        for datum in data:
+            vectors = util.Counter()
+            for label in self.legalLabels:
+                vectors[label] = self.weights[label] * datum
+            guesses.append(vectors.argMax())
         return guesses
-
 
     def findHighWeightFeatures(self, label):
         """
         Returns a list of the 100 features with the greatest weight for some label
         """
-        featuresWeights = []
-
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
-        return featuresWeights
+        featureWeights = list(self.weights[label].items())
+        featureWeights.sort(key=lambda feature: feature[1], reverse=True)
+        topFeatures = [feature for feature, weight in featureWeights[:100]]
+        return topFeatures

@@ -53,8 +53,33 @@ def enhancedFeatureExtractorDigit(datum):
     """
     features = basicFeatureExtractorDigit(datum)
 
-    "*** YOUR CODE HERE to extract and add enhanced features to features list ***"
-    util.raiseNotDefined()
+    for x in range(1, DIGIT_DATUM_WIDTH):
+        for y in range(1, DIGIT_DATUM_HEIGHT):
+            features[("horiz", x, y)] = int(datum.getPixel(x, y) > datum.getPixel(x - 1, y))
+            features[("verti", x, y)] = int(datum.getPixel(x, y) > datum.getPixel(x, y - 1))
+
+    def floodFill(x, y, visited):
+        stack = [(x, y)]
+        while stack:
+            px, py = stack.pop()
+            if (px, py) not in visited and datum.getPixel(px, py) > 0:
+                visited.add((px, py))
+                neighbors = [(px - 1, py), (px + 1, py), (px, py - 1), (px, py + 1)]
+                for nx, ny in neighbors:
+                    if 0 <= nx < DIGIT_DATUM_WIDTH and 0 <= ny < DIGIT_DATUM_HEIGHT:
+                        stack.append((nx, ny))
+
+    visitedRegions = set()
+    contiguousRegions = 0
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT):
+            if (x, y) not in visitedRegions and datum.getPixel(x, y) > 0:
+                floodFill(x, y, visitedRegions)
+                contiguousRegions += 1
+
+    maximumNumberOfRegions = 4
+    for i in range(1, maximumNumberOfRegions + 1):
+        features[f"regions_{i}"] = 1 if contiguousRegions == i else 0
 
     return features
 
