@@ -54,7 +54,7 @@ class MiraClassifier:
 
     def trainAndTune(self, trainingData, trainingLabels, validationData, validationLabels, cGrid):
         """
-        This method sets self.weights using MIRA.  Train the classifier for each value of C in Cgrid,
+        This method sets self.weights using MIRA. Train the classifier for each value of C in Cgrid,
         then store the weights that give the best accuracy on the validationData.
 
         Use the provided self.weights[label] data structure so that
@@ -65,6 +65,7 @@ class MiraClassifier:
 
         bestAccuracyCount = -1
         bestWeights = {}
+        bestParameter = None
 
         for c in cGrid:
             self.weights = {label: util.Counter() for label in self.legalLabels}
@@ -107,10 +108,9 @@ class MiraClassifier:
         Classifies each datum as the label that most closely matches the prototype vector
         for that label.  See the project description for details.
 
-        Recall that a datum is a util.counter...
+        Recall that a datum is a util.Counter from features to values.
         """
         guesses = []
-        "*** YOUR CODE HERE ***"
         for datum in data:
             vectors = util.Counter()
             for label in self.legalLabels:
@@ -120,10 +120,10 @@ class MiraClassifier:
 
     def findHighWeightFeatures(self, label):
         """
-        Returns a list of the 100 features with the greatest weight for some label
+        Returns a list of the 100 features with the greatest weight for some label.
         """
-        "*** YOUR CODE HERE ***"
         featureWeights = list(self.weights[label].items())
         featureWeights.sort(key=lambda feature: feature[1], reverse=True)
         topFeatures = [feature for feature, weight in featureWeights[:100]]
         return topFeatures
+

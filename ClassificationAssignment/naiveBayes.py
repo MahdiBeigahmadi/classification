@@ -67,29 +67,28 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         bestAccuracyCount = -1  # best accuracy so far on validation set
 
         # Common training - get all counts from training data
-        # We only do it once - save computation in tuning smoothing parameter
         commonPrior = util.Counter()  # probability over labels
         commonConditionalProb = util.Counter()  # Conditional probability of feature feat being 1
-        # indexed by (feat, label)
-        commonCounts = util.Counter()  # how many time I have seen feature 'feat' with label 'y'
-        # whatever inactive or active
-        bestParams = (commonPrior, commonConditionalProb, kgrid[0])
+        commonCounts = util.Counter()  # how many times feature 'feat' with label 'y' was seen
 
+        # Collecting common counts
         for i in range(len(trainingData)):
             datum = trainingData[i]
             label = trainingLabels[i]
-            "*** YOUR CODE HERE to complete populating commonPrior, commonCounts, and commonConditionalProb ***"
             commonPrior[label] += 1
             for feat, value in datum.items():
                 if value > 0:
                     commonConditionalProb[(feat, label)] += 1
                 commonCounts[(feat, label)] += 1
+
+        bestParams = (commonPrior, commonConditionalProb, kgrid[0])
+
         for k in kgrid:  # Smoothing parameter tuning loop!
             prior = util.Counter()
             conditionalProb = util.Counter()
             counts = util.Counter()
 
-            # get counts from common training step
+            # Copying common counts
             for key, val in commonPrior.items():
                 prior[key] += val
             for key, val in commonCounts.items():
@@ -97,14 +96,13 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
             for key, val in commonConditionalProb.items():
                 conditionalProb[key] += val
 
-            # smoothing:
+            # Laplace smoothing:
             for label in self.legalLabels:
                 for feat in self.features:
-                    "*** YOUR CODE HERE to update conditionalProb and counts using Lablace smoothing ***"
                     conditionalProb[(feat, label)] += k
                     counts[(feat, label)] += 2 * k
 
-                    # normalizing:
+            # Normalizing:
             prior.normalize()
             for x, count in conditionalProb.items():
                 conditionalProb[x] = count * 1.0 / counts[x]
@@ -112,7 +110,7 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
             self.prior = prior
             self.conditionalProb = conditionalProb
 
-            # evaluating performance on validation set
+            # Evaluating performance on validation set
             predictions = self.classify(validationData)
             accuracyCount = [predictions[i] == validationLabels[i] for i in range(len(validationLabels))].count(True)
 
@@ -121,7 +119,6 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
             if accuracyCount > bestAccuracyCount:
                 bestParams = (prior, conditionalProb, k)
                 bestAccuracyCount = accuracyCount
-            # end of automatic tuning loop
 
         self.prior, self.conditionalProb, self.k = bestParams
         print("Best Performance on validation set for k=%f: (%.1f%%)" % (
@@ -177,3 +174,4 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         topFeatures = [feature for feature, _ in featuresOdds[:100]]
 
         return topFeatures
+

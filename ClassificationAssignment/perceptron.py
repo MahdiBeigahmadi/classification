@@ -46,7 +46,7 @@ class PerceptronClassifier:
         (and thus represents a vector of values).
         """
 
-        self.features = trainingData[0].keys()  # could be useful later
+        self.features = trainingData[0].keys()  # Could be useful later
         # DO NOT ZERO OUT YOUR WEIGHTS BEFORE STARTING TRAINING
 
         for iteration in range(self.max_iterations):
@@ -54,7 +54,7 @@ class PerceptronClassifier:
             for i, data in enumerate(trainingData):
                 scores = util.Counter()
                 for label in self.legalLabels:
-                    scores[label] = self.weights[label] * data
+                    scores[label] = self.weights[label] * data  # Dot product between weights and features
                 predictedLabel = scores.argMax()
                 trueLabel = trainingLabels[i]
 
@@ -62,31 +62,25 @@ class PerceptronClassifier:
                     self.weights[trueLabel] += data
                     self.weights[predictedLabel] -= data
 
-        print("finished training")
+        print("Finished training")
 
     def classify(self, data):
         """
         Classifies each datum as the label that most closely matches the prototype vector
         for that label.  See the project description for details.
 
-        Recall that a datum is a util.counter...
+        Recall that a datum is a util.Counter from features to values.
         """
         guesses = []
         for datum in data:
             vect = util.Counter()
-            "*** YOUR CODE HERE ***"
             for label in self.legalLabels:
-                vect[label] = self.weights[label] * datum
+                vect[label] = self.weights[label] * datum  # Dot product
             guesses.append(vect.argMax())
         return guesses
 
     def findHighWeightFeatures(self, label):
         """
-        Returns a list of the 100 features with the greatest weight for some label
+        Returns a list of the 100 features with the greatest weight for some label.
         """
-        featuresWeights = []
-
-        "*** YOUR CODE HERE ***"
-        # util.raiseNotDefined()
-
         return self.weights[label].sortedKeys()[:100]
